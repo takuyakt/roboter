@@ -1,6 +1,7 @@
 import csv
 import os
 import tempfile
+import shutil
 
 import termcolor
 
@@ -23,26 +24,44 @@ def green_print(text: str):
 
 
 def write_csv_ranking(csv_file_name: str, restaurant_name: str):
-    header = ["NAME", "COUNT"]
-
-#    if not os.path.isfile(csv_file_name):
-#        with open(csv_file_name, 'w', newline="") as template_file:
-#            writer = csv.DictWriter(template_file, fieldnames=header)
-#            writer.writeheader()
-
+    header = ['NAME', 'COUNT']
+    csv_file = None
     try:
-        with open(csv_file_name, 'r+', newline="") as csv_file:
-            reader = csv.DictReader(csv_file, fieldnames=header)
-    except:
-        pass
+        csv_file = open(csv_file_name, 'r', newline="")
+        reader = csv.DictReader(csv_file, fieldnames=header)
+        next(reader)
+    except Exception:
+        print('There is not {0} file.'.format(csv_file_name))
 
-    with tempfile.NamedTemporaryFile(delete=False) as new_file:
+    with tempfile.NamedTemporaryFile('w', delete=False, newline="") as new_file:
+
         writer = csv.DictWriter(new_file, fieldnames=header)
         writer.writeheader()
-        for row in reader:
-            if row["NAME"] == restaurant_name:
-                pass
-#            writer.writerow({"NAME": restaurant_name, "COUNT": 1})  # Todo カウントアップする。
+
+        update_count = False
+
+        if csv_file is None:
+            writer.writerow({'NAME': restaurant_name, 'COUNT': 1})
+        else:
+            for row in reader:
+                # 対象のレストランはCOUNTを更新して移送
+                if row['NAME'] == restaurant_name:
+                    row['COUNT'] = int(row['COUNT']) + 1
+                    writer.writerow({'NAME': restaurant_name, 'COUNT': row['COUNT']})
+                    update_count = True
+                else:
+                    # 対象外のレストランはそのままレコードを移送
+                    writer.writerow({'NAME': row['NAME'], 'COUNT': row['COUNT']})
+            if not update_count:
+                # 新規のレストランはレコードを追加
+                writer.writerow({'NAME': restaurant_name, 'COUNT': 1})
+
+    if csv_file is not None:
+        csv_file.close()
+
+    if os.path.isfile(csv_file_name):
+        os.remove(csv_file_name)
+    shutil.copy(new_file.name, csv_file_name)
 
 
 def main():
