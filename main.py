@@ -8,6 +8,10 @@ import termcolor
 welcome_text = """\
 こんにちは!私はRobokoです。あなたの名前は何ですか?
 """
+recommend_text="""\
+私のオススメのレストランは、{0}です。
+このレストランは好きですか？ [Yes/No]
+"""
 
 question_text = """\
 {0}さん。どこのレストランが好きですか?
@@ -39,6 +43,8 @@ def read_ranking(csv_file_name):
     finally:
         return ranking
 
+def get_recommend_restaurants(ranking):
+        return "Sushi" #TODO 未実装 yieldを利用する。
 
 def write_ranking(csv_file_name, ranking, restaurant_name):
     with tempfile.NamedTemporaryFile('w', delete=False, newline="") as new_file:
@@ -75,13 +81,22 @@ def main():
         if len(user_name) != 0:
             break
 
+    ranking = read_ranking(ranking_file)
+
+    if ranking:
+        while True:
+            green_print(recommend_text.format(get_recommend_restaurants(ranking)))
+            answer = input().capitalize()
+            if (answer == 'Yes' or answer == 'Y') :
+                break
+            elif(answer == 'No' or answer == 'N'):
+                pass #Todo 次のおすすめを実装する。
+
     while True:
         green_print(question_text.format(user_name))
         favorite_restaurant_name = input().capitalize()
         if len(favorite_restaurant_name) != 0:
             break
-
-    ranking = read_ranking(ranking_file)
 
     write_ranking(ranking_file, ranking, favorite_restaurant_name)
     green_print(goodbye_text.format(user_name))
