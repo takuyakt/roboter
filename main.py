@@ -18,46 +18,52 @@ goodbye_text = """\
 良い一日を!さようなら。
 """
 
+ranking_file = 'ranking.csv'
+ranking_header = ['NAME', 'COUNT']
+
 
 def green_print(text: str):
     print(termcolor.colored(text, color='green'))
 
 
-def write_csv_ranking(csv_file_name: str, restaurant_name: str):
-    header = ['NAME', 'COUNT']
-    csv_file = None
+def read_ranking(csv_file_name):
+    ranking = []
     try:
-        csv_file = open(csv_file_name, 'r', newline="")
-        reader = csv.DictReader(csv_file, fieldnames=header)
-        next(reader)
+        with open(csv_file_name, 'r', newline="") as csv_file:
+            reader = csv.DictReader(csv_file)
+            for line in reader:
+                print('read line:', line.items())
+                ranking.append(line.items())
     except Exception:
         print('There is not {0} file.'.format(csv_file_name))
+    finally:
+        return ranking
 
+
+def write_ranking(csv_file_name, ranking, restaurant_name):
     with tempfile.NamedTemporaryFile('w', delete=False, newline="") as new_file:
 
-        writer = csv.DictWriter(new_file, fieldnames=header)
+        writer = csv.DictWriter(new_file, fieldnames=ranking_header)
         writer.writeheader()
-
         update_count = False
 
-        if csv_file is None:
-            writer.writerow({'NAME': restaurant_name, 'COUNT': 1})
-        else:
-            for row in reader:
-                # 対象のレストランはCOUNTを更新して移送
-                if row['NAME'] == restaurant_name:
-                    row['COUNT'] = int(row['COUNT']) + 1
-                    writer.writerow({'NAME': restaurant_name, 'COUNT': row['COUNT']})
+        if ranking:
+            for row in ranking:
+                dict = {}
+                for k, v in row:
+                    dict[k] = v
+
+                if dict.get('NAME') == restaurant_name:
+                    count = dict.get('COUNT')
+                    count = int(count) + 1
+                    writer.writerow({'NAME': restaurant_name, 'COUNT': count})
                     update_count = True
                 else:
-                    # 対象外のレストランはそのままレコードを移送
-                    writer.writerow({'NAME': row['NAME'], 'COUNT': row['COUNT']})
-            if not update_count:
-                # 新規のレストランはレコードを追加
-                writer.writerow({'NAME': restaurant_name, 'COUNT': 1})
+                    writer.writerow({'NAME': dict.get('NAME'), 'COUNT': dict.get('COUNT')})
 
-    if csv_file is not None:
-        csv_file.close()
+        if not update_count:
+            # 新規のレストランはレコードを追加
+            writer.writerow({'NAME': restaurant_name, 'COUNT': 1})
 
     if os.path.isfile(csv_file_name):
         os.remove(csv_file_name)
@@ -73,11 +79,13 @@ def main():
 
     while True:
         green_print(question_text.format(user_name))
-        favorite_restaurant_name = input()
+        favorite_restaurant_name = input().capitalize()
         if len(favorite_restaurant_name) != 0:
             break
 
-    write_csv_ranking('ranking.csv', favorite_restaurant_name)
+    ranking = read_ranking(ranking_file)
+
+    write_ranking(ranking_file, ranking, favorite_restaurant_name)
     green_print(goodbye_text.format(user_name))
 
 
