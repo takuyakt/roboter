@@ -49,17 +49,15 @@ def write_ranking(csv_file_name, ranking, restaurant_name):
 
         if ranking:
             for row in ranking:
-                dict = {}
-                for k, v in row:
-                    dict[k] = v
+                dic = dict(row)
 
-                if dict.get('NAME') == restaurant_name:
-                    count = dict.get('COUNT')
+                if dic.get('NAME') == restaurant_name:
+                    count = dic.get('COUNT')
                     count = int(count) + 1
                     writer.writerow({'NAME': restaurant_name, 'COUNT': count})
                     update_count = True
                 else:
-                    writer.writerow({'NAME': dict.get('NAME'), 'COUNT': dict.get('COUNT')})
+                    writer.writerow({'NAME': dic.get('NAME'), 'COUNT': dic.get('COUNT')})
 
         if not update_count:
             # 新規のレストランはレコードを追加
