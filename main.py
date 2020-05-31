@@ -8,7 +8,7 @@ import termcolor
 welcome_text = """\
 こんにちは!私はRobokoです。あなたの名前は何ですか?
 """
-recommend_text="""\
+recommend_text = """\
 私のオススメのレストランは、{0}です。
 このレストランは好きですか？ [Yes/No]
 """
@@ -31,20 +31,22 @@ def green_print(text: str):
 
 
 def read_ranking(csv_file_name):
-    ranking = []
+    ranking = {}
     try:
         with open(csv_file_name, 'r', newline="") as csv_file:
             reader = csv.DictReader(csv_file)
             for line in reader:
-                print('read line:', line.items())
-                ranking.append(line.items())
+                ranking.update(line.items())
+                print(ranking)
     except Exception:
         print('There is not {0} file.'.format(csv_file_name))
     finally:
         return ranking
 
+
 def get_recommend_restaurants(ranking):
-        return "Sushi" #TODO 未実装 yieldを利用する。
+    return ranking.get('NAME') #Todo yieldする。
+
 
 def write_ranking(csv_file_name, ranking, restaurant_name):
     with tempfile.NamedTemporaryFile('w', delete=False, newline="") as new_file:
@@ -54,10 +56,8 @@ def write_ranking(csv_file_name, ranking, restaurant_name):
         update_count = False
 
         if ranking:
-            for row in ranking:
-                dic = dict(row)
-
-                if dic.get('NAME') == restaurant_name:
+            for dic in ranking.items():
+                if dic['NAME'] == restaurant_name:
                     count = dic.get('COUNT')
                     count = int(count) + 1
                     writer.writerow({'NAME': restaurant_name, 'COUNT': count})
@@ -87,10 +87,10 @@ def main():
         while True:
             green_print(recommend_text.format(get_recommend_restaurants(ranking)))
             answer = input().capitalize()
-            if (answer == 'Yes' or answer == 'Y') :
+            if (answer == 'Yes' or answer == 'Y'):
                 break
-            elif(answer == 'No' or answer == 'N'):
-                pass #Todo 次のおすすめを実装する。
+            elif (answer == 'No' or answer == 'N'):
+                pass  # Todo 次のおすすめを実装する。
 
     while True:
         green_print(question_text.format(user_name))
