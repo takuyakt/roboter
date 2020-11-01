@@ -37,7 +37,6 @@ def read_ranking(csv_file_name):
             reader = csv.DictReader(csv_file)
             for line in reader:
                 ranking.update(line.items())
-                print(ranking)
     except Exception:
         print('There is not {0} file.'.format(csv_file_name))
     finally:
